@@ -27,6 +27,38 @@
 #define VERSION_FIELD_V4 0x40
 #define VERSION_FIELD_V7 0x70
 
+#define UINT12_MAX 0xFFF
+
+
+static int malformed_uuid(const UUID uuid)
+{
+    int result = FAILMAL;
+
+    VariantField var = uuid_var(uuid);
+    VersionField ver = uuid_ver(uuid);
+
+    if (var == RFC4122 &&
+        (ver == VERSION4 || ver == VERSION7))
+    {
+        result = SUCCESS;
+    }
+
+    return result;
+}
+
+
+static uint16_t swap_bytes16(uint16_t c)
+{
+
+    uint16_t r = 0;
+
+    for (int i = 0; i < 2; ++i)
+    {
+        r |= ((c >> (i * 8)) & 0xFF) << ((1 - i) * 8);
+    }
+
+    return r;
+}
 
 static uint64_t swap_bytes48(uint64_t c)
 {
@@ -35,18 +67,6 @@ static uint64_t swap_bytes48(uint64_t c)
     for (int i = 0; i < 6; ++i)
     {
         r |= ((c >> (i * 8)) & 0xFF) << ((7 - i) * 8);
-    }
-
-    return r;
-}
-
-static __uint128_t swap_bytes128(__uint128_t c)
-{
-    __uint128_t r = 0;
-
-    for (int i = 0; i < 16; ++i)
-    {
-        r |= ((c >> (i * 8)) & 0xFF) << ((15 - i) * 8);
     }
 
     return r;
@@ -66,92 +86,108 @@ static uint64_t be_epoch_ms_ts(void)
         timestamp = swap_bytes48(timestamp);
     }
 
-    return timestamp;
+    return timestamp >> 16;
 }
 
 
-void uuid4(UUID uuid)
+int uuid4(UUID uuid)
 {
-    getrandom(uuid,
-              UUID_WIDTH,
-              GRND_NONBLOCK);
+    int result = SUCCESS;
+
+    ssize_t bytes = getrandom(uuid,
+                              UUID_WIDTH,
+                              GRND_NONBLOCK);
 
     UNSET(uuid[VARIANT_FIELD_POSITION], VARIANT_FIELD_CLEAR);
     UNSET(uuid[VERSION_FIELD_POSITION], VERSION_FIELD_CLEAR);
 
     SET(uuid[VARIANT_FIELD_POSITION], VARIANT_FIELD_RFC4122);
     SET(uuid[VERSION_FIELD_POSITION], VERSION_FIELD_V4);
+
+    if (bytes < UUID_WIDTH)
+    {
+        result = FAILENT;
+    }
+
+    return result;
 }
 
-void uuid7(UUID uuid)
+int uuid7(UUID uuid)
 {
+    static uint64_t prev_ts = 0;
+    static uint16_t counter = 0;
+
+    int result = SUCCESS;
+
     uint64_t ts = be_epoch_ms_ts();
 
-    ts = (ts >> 16);
+    if (ts != prev_ts)
+    {
+        prev_ts = ts;
+        counter = 0;
+    }
+    else
+    {
+        ++counter;
+    }
+
+    if (counter > UINT12_MAX)
+    {
+        result = FAILSRT;
+    }
+
+    uint16_t counter12 = counter;
+
+    if (LITTLE_ENDIAN)
+    {
+        counter12 = swap_bytes16(counter12);
+    }
 
     memcpy(uuid,
            &ts,
            6);
 
-    getrandom(uuid + 6,
-              10,
-              GRND_NONBLOCK);
+    memcpy(uuid + 6,
+           &counter12,
+           sizeof(counter12));
+
+    ssize_t bytes = getrandom(uuid + 8,
+                              8,
+                              GRND_NONBLOCK);
 
     UNSET(uuid[VARIANT_FIELD_POSITION], VARIANT_FIELD_CLEAR);
     UNSET(uuid[VERSION_FIELD_POSITION], VERSION_FIELD_CLEAR);
 
     SET(uuid[VARIANT_FIELD_POSITION], VARIANT_FIELD_RFC4122);
     SET(uuid[VERSION_FIELD_POSITION], VERSION_FIELD_V7);
-}
 
-
-void uuids(UUIDs string,
-           UUID uuid)
-{
-    snprintf(string, UUID_STRLEN,
-             "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-             uuid[0], uuid[1], uuid[2], uuid[3],
-             uuid[4], uuid[5],
-             uuid[6], uuid[7],
-             uuid[8], uuid[9],
-             uuid[10], uuid[11], uuid[12], uuid[13], uuid[14], uuid[15]
-    );
-}
-
-UUIDi uuidi(const UUID uuid)
-{
-    UUIDi result = *(UUIDi*)uuid;
-
-    if (IS_LITTLE_ENDIAN)
+    if (bytes < 8)
     {
-        result = swap_bytes128(result);
+        result |= FAILENT;
     }
 
     return result;
 }
 
-void uuidrs(UUID uuid,
-            const UUIDs string)
+
+int uuids(UUIDs string,
+          const UUID uuid)
 {
-    char byte[3] = { 0 };
-    size_t index = 0;
+    int result;
 
-    for (int i = 0; i < UUID_STRLEN; i++)
+    if ((result = malformed_uuid(uuid)) == SUCCESS)
     {
-        const char c = string[i];
-
-        if (c != '-')
-        {
-            byte[0] = c;
-            byte[1] = string[++i];
-
-            uint8_t r = (uint8_t)strtoul(byte,
-                                         NULL,
-                                         16);
-
-            uuid[index++] = r;
-        }
+        snprintf(string, UUID_STRLEN,
+                 "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+                 uuid[0], uuid[1], uuid[2], uuid[3],
+                 uuid[4], uuid[5],
+                 uuid[6], uuid[7],
+                 uuid[8], uuid[9],
+                 uuid[10], uuid[11], uuid[12], uuid[13], uuid[14], uuid[15]
+        );
     }
+
+    return result;
 }
 
 

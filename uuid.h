@@ -1,12 +1,14 @@
 #pragma once
 
 
+#define UUID_WIDTH  sizeof(__uint128_t)
 #define UUID_STRLEN 37
-#define UUID_WIDTH sizeof(__uint128_t)
 
-#define RFC4122 0x02
+
+#define RFC4122   0x02
 
 #define VERSION4 0x04
+#define VERSION7 0x07
 
 
 #define NIL_UUID (UUID){ 0 }
@@ -16,26 +18,28 @@
                          0xFF, 0xFF, 0xFF, 0xFF }
 
 
-typedef uint8_t UUID[UUID_WIDTH];
+#define SUCCESS 0x00
+#define FAILENT 0x01
+#define FAILSRT 0X02
+#define FAILLEN 0x03
+#define FAILMAL 0x04
+
+
+typedef uint8_t Byte;
+typedef Byte UUID[UUID_WIDTH];
 typedef __uint128_t UUIDi;
 typedef char UUIDs[UUID_STRLEN];
-typedef uint8_t VariantField;
-typedef uint8_t VersionField;
+typedef Byte VariantField;
+typedef Byte VersionField;
 
 
-void uuid4(UUID uuid);
+int uuid4(UUID uuid);
 
-void uuid7(UUID uuid);
-
-
-void uuids(UUIDs string,
-           UUID uuid);
-
-void uuidrs(UUID uuid,
-            const UUIDs string);
+int uuid7(UUID uuid);
 
 
-UUIDi uuidi(const UUID uuid);
+int uuids(UUIDs string,
+          const UUID uuid);
 
 
 VariantField uuid_var(const UUID uuid);

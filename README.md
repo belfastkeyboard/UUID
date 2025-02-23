@@ -55,3 +55,7 @@ VersionField uuid_ver(const UUID uuid);
 - **UUIDs**: An array representing the UUID in hexadecimal string format 
 - **VariantField**: Helper type for determining UUID type
 - **VersionField**: Helper type for determining UUID version
+
+## Sources
+- [A Universally Unique IDentifier (UUID) URN Namespace](https://datatracker.ietf.org/doc/html/rfc4122)
+- [Universally Unique IDentifiers (UUIDs)](https://www.rfc-editor.org/rfc/rfc9562.html)

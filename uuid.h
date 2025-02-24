@@ -35,6 +35,9 @@ typedef Byte VersionField;
 
 int uuid4(UUID uuid);
 
+//int uuid5(UUID uuid,
+//          )
+
 int uuid7(UUID uuid);
 
 

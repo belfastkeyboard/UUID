@@ -2,32 +2,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "uuid.h"
+#include "sha1.h"
+
+// TODO: test passing NULL to any array-type parameter for uuid funcs
 
 
 int main(void)
 {
-    for (int i = 0; i < 5000; ++i)
+    MessageDigest digest;
+
+    int res = hash_sha1(digest,
+                        NULL);
+
+    for(int i = 0; i < 20 ; ++i)
     {
-        UUID uuid = { 0 };
-        UUIDs urn = { 0 };
-
-        if (uuid7(uuid))
-        {
-            return EXIT_FAILURE;
-        }
-
-        if (uuids(urn,
-                  uuid))
-        {
-            return EXIT_FAILURE;
-        }
-
-        VariantField var = uuid_var(uuid);
-
-        printf("%04d: %s\n",
-               i,
-               urn);
+        printf("%02X",
+               digest[i]);
     }
 
-    return EXIT_SUCCESS;
+    return res;
 }

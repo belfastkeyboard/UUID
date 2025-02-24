@@ -5,4 +5,6 @@ set(CMAKE_C_STANDARD 23)
 
 add_executable(uuid main.c
         uuid.c
-        uuid.h)
+        uuid.h
+        sha1.c
+        sha1.h)

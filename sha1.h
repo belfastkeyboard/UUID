@@ -11,4 +11,5 @@ typedef uint8_t MessageDigest[SHA1_HASH_LENGTH];
 
 
 int hash_sha1(MessageDigest digest,
-              const char *message);
+              char *message,
+              size_t length);

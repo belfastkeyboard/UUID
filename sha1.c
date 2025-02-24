@@ -255,18 +255,17 @@ int input(SHA1Context *context,
 
 
 int hash_sha1(MessageDigest digest,
-              const char *message)
+              char *message,
+              const size_t length)
 {
     SHA1Context context = context_init();
     int err = SHA_SUCCESS;
 
     if (message)
     {
-        const size_t len = strlen(message);
-
         err = input(&context,
                     (const uint8_t*)message,
-                    len);
+                    length);
     }
 
     if (err == SHA_SUCCESS)

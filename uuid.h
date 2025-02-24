@@ -1,17 +1,20 @@
 #pragma once
 
+#include <stdint.h>
+
 
 #define UUID_WIDTH  sizeof(__uint128_t)
 #define UUID_STRLEN 37
 
 
-#define RFC4122   0x02
+#define RFC4122 0x02
 
 #define VERSION4 0x04
 #define VERSION7 0x07
 
 
 #define NIL_UUID (UUID){ 0 }
+
 #define MAX_UUID (UUID){ 0xFF, 0xFF, 0xFF, 0xFF, \
                          0xFF, 0xFF, 0xFF, 0xFF, \
                          0xFF, 0xFF, 0xFF, 0xFF, \

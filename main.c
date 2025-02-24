@@ -1,24 +1,28 @@
-#include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include "uuid.h"
-#include "sha1.h"
 
 // TODO: test passing NULL to any array-type parameter for uuid funcs
 
+#include "sha1.h"
+
+
+
+#include <string.h>
 
 int main(void)
 {
-    MessageDigest digest;
+    UUID uuid;
+    uuid5(uuid,
+          NAMESPACE_URL,
+          "google.com");
 
-    int res = hash_sha1(digest,
-                        NULL);
+    UUIDs string;
+    uuids(string,
+          uuid);
 
-    for(int i = 0; i < 20 ; ++i)
-    {
-        printf("%02X",
-               digest[i]);
-    }
+    printf("Test:   %s.\nPython: %s.\n",
+           string,
+           "fedb2fa3-8f5c-5189-80e6-f563dd1cb8f9");
 
-    return res;
+    return 0;
 }
